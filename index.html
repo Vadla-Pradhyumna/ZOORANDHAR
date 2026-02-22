@@ -1,33 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>ZOORANDHAR</title>
 <style>
-body{
+html,body{
   margin:0;
-  background:#1e1e2f;
+  padding:0;
   overflow:hidden;
+  background:#1e1e2f;
   font-family:Arial, sans-serif;
+  height:100%;
 }
 
 #gameCanvas{
   display:block;
-  margin:auto;
   background:#4a90e2;
+  touch-action:none;
 }
 
 #score{
-  position:absolute;
-  top:20px;
+  position:fixed;
+  top:15px;
   left:50%;
   transform:translateX(-50%);
   color:white;
-  font-size:32px;
+  font-size:28px;
   font-weight:bold;
+  z-index:10;
 }
 
 #startScreen, #gameOverScreen{
-  position:absolute;
+  position:fixed;
+  top:0;
+  left:0;
   width:100%;
   height:100%;
   display:flex;
@@ -36,13 +42,23 @@ body{
   flex-direction:column;
   background:rgba(0,0,0,0.7);
   color:white;
+  z-index:20;
+  text-align:center;
+  padding:20px;
 }
 
 button{
-  padding:10px 20px;
+  padding:12px 25px;
   font-size:18px;
   margin-top:15px;
   cursor:pointer;
+  border:none;
+  border-radius:8px;
+}
+
+img{
+  max-width:80%;
+  height:auto;
 }
 </style>
 </head>
@@ -52,21 +68,28 @@ button{
 
 <div id="startScreen">
 <h1>ZOORANDHAR</h1>
-<p>Press Space / Click / Tap to Fly</p>
+<p>Tap Anywhere to Fly</p>
 <button onclick="startGame()">Start Game</button>
 </div>
 
 <div id="gameOverScreen" style="display:none;">
-<img src="gameover.jpeg" width="250">
+<img src="gameover.jpeg">
 <h2>Game Over</h2>
 <button onclick="restartGame()">Restart</button>
 </div>
 
-<canvas id="gameCanvas" width="400" height="600"></canvas>
+<canvas id="gameCanvas"></canvas>
 
 <script>
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+
+function resizeCanvas(){
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
 
 const playerImg = new Image();
 playerImg.src = "player.jpeg";
@@ -74,18 +97,18 @@ playerImg.src = "player.jpeg";
 const obstacleImg = new Image();
 obstacleImg.src = "obstacle.png";
 
-let gravity = 0.4; // slower falling (easier control)
-let lift = -8; // smoother jump
-let speed = 1; // very slow speed (easy mode)
+let gravity = 0.4;
+let lift = -8;
+let speed = 1;
 
 let player, pipes, score, gameRunning;
 
 function init(){
 player = {
-  x:80,
-  y:250,
-  width:60,
-  height:60,
+  x: canvas.width * 0.2,
+  y: canvas.height * 0.4,
+  width: 60,
+  height: 60,
   velocity:0
 };
 
@@ -120,8 +143,8 @@ canvas.addEventListener("mousedown", jump);
 canvas.addEventListener("touchstart", jump);
 
 function createPipe(){
-let gap = 220; // bigger gap between pipes (easier)
-let topHeight = Math.random()*300 + 50;
+let gap = canvas.height * 0.35; // responsive gap
+let topHeight = Math.random()*(canvas.height*0.4) + 40;
 
 pipes.push({
   x: canvas.width,
@@ -153,14 +176,12 @@ endGame();
 pipes.forEach(pipe=>{
 pipe.x -= speed;
 
-// collision
 if(player.x < pipe.x + pipe.width &&
    player.x + player.width > pipe.x &&
    (player.y < pipe.top || player.y + player.height > canvas.height - pipe.bottom)){
 endGame();
 }
 
-// scoring
 if(!pipe.passed && pipe.x + pipe.width < player.x){
 pipe.passed = true;
 score++;
@@ -183,7 +204,7 @@ function animate(){
 if(!gameRunning) return;
 
 frame++;
-if(frame % 140 === 0) createPipe(); // pipes appear less often
+if(frame % 160 === 0) createPipe();
 
 update();
 draw();
